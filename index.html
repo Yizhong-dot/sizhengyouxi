@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>抉择·青春 —— 一堂可以玩的思政课</title>
+<meta name="description" content="《思想道德与法治》交互式剧情小游戏：14 个真实校园抉择，4 个维度成长，41 张知识卡。">
+<style>
+  :root{
+    --paper:#f6f1e6;
+    --paper-2:#fffdf8;
+    --ink:#2b2622;
+    --ink-2:#5c534b;
+    --ink-3:#8b8078;
+    --red:#a8231f;
+    --red-2:#c9382f;
+    --gold:#b98b3a;
+    --line:rgba(43,38,34,.13);
+    --good:#1f7a54;
+    --bad:#a8231f;
+    --mid:#8a6a1f;
+    --radius:16px;
+    --shadow:0 10px 30px -12px rgba(43,38,34,.28);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:"PingFang SC","Microsoft YaHei","Hiragino Sans GB",system-ui,sans-serif;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, #fffdf8 0%, rgba(255,253,248,0) 60%),
+      var(--paper);
+    color:var(--ink);
+    min-height:100vh;
+    line-height:1.72;
+    -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background-image:radial-gradient(rgba(43,38,34,.055) 1px, transparent 1px);
+    background-size:22px 22px;
+    mask-image:linear-gradient(to bottom, rgba(0,0,0,.9), rgba(0,0,0,.25));
+  }
+  .wrap{position:relative;z-index:1;max-width:600px;margin:0 auto;padding:0 18px 48px}
+  .serif{font-family:"Songti SC","Noto Serif SC","STSong",serif}
+
+  /* ---------- 封面 ---------- */
+  #cover{padding-top:calc(28px + env(safe-area-inset-top))}
+  .course-chip{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:12px;letter-spacing:.06em;color:var(--red);
+    border:1px solid rgba(168,35,31,.3);background:rgba(168,35,31,.06);
+    padding:5px 11px;border-radius:999px;
+  }
+  .cover-title{
+    font-family:"Songti SC","Noto Serif SC","STSong",serif;
+    font-size:40px;line-height:1.2;margin:18px 0 6px;letter-spacing:.08em;font-weight:700;
+  }
+  .cover-title em{font-style:normal;color:var(--red)}
+  .cover-sub{font-size:15px;color:var(--ink-2);letter-spacing:.04em;margin:0 0 4px}
+  .cover-rule{height:1px;background:var(--line);margin:22px 0}
+  .lead{font-size:14.5px;color:var(--ink-2);margin:0 0 18px}
+  .lead b{color:var(--ink)}
+  .meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;margin:18px 0 4px}
+  .meta-item{font-size:12.5px;color:var(--ink-3);border-left:2px solid rgba(168,35,31,.25);padding-left:9px}
+  .meta-item b{display:block;color:var(--ink);font-size:13px;font-weight:600;letter-spacing:.02em}
+
+  .btn{
+    display:block;width:100%;border:0;cursor:pointer;font:inherit;
+    padding:16px 20px;border-radius:14px;font-size:16px;font-weight:600;letter-spacing:.06em;
+    background:linear-gradient(180deg,var(--red-2),var(--red));
+    color:#fff;box-shadow:0 10px 24px -10px rgba(168,35,31,.65);
+    transition:transform .16s ease, box-shadow .16s ease;
+  }
+  .btn:active{transform:translateY(1px) scale(.995);box-shadow:0 6px 14px -8px rgba(168,35,31,.6)}
+  .btn.ghost{
+    background:transparent;color:var(--ink);border:1px solid var(--line);box-shadow:none;
+    font-weight:500;font-size:14.5px;padding:13px 18px;
+  }
+  .hint{text-align:center;font-size:12px;color:var(--ink-3);margin-top:12px}
+
+  /* ---------- 状态栏 ---------- */
+  #game{display:none}
+  .status{
+    position:sticky;top:0;z-index:5;margin:0 -18px 18px;padding:10px 18px 12px;
+    background:linear-gradient(to bottom,rgba(246,241,230,.98),rgba(246,241,230,.9));
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--line);
+  }
+  .status-top{display:flex;align-items:center;justify-content:space-between;font-size:11.5px;color:var(--ink-3);margin-bottom:8px;letter-spacing:.04em}
+  .status-top .act{color:var(--red);font-weight:600}
+  .bars{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .bar-label{font-size:11px;color:var(--ink-2);display:flex;justify-content:space-between;margin-bottom:3px}
+  .bar-label span:last-child{color:var(--ink-3);font-variant-numeric:tabular-nums}
+  .bar{height:4px;border-radius:99px;background:rgba(43,38,34,.1);overflow:hidden}
+  .bar i{display:block;height:100%;width:50%;border-radius:99px;background:linear-gradient(90deg,#c9a24a,var(--gold));transition:width .55s cubic-bezier(.4,0,.2,1)}
+  .bar.b1 i{background:linear-gradient(90deg,#c03a30,#a8231f)}
+  .bar.b2 i{background:linear-gradient(90deg,#b9812f,#b98b3a)}
+  .bar.b3 i{background:linear-gradient(90deg,#2c6e8f,#1f5f80)}
+  .bar.b4 i{background:linear-gradient(90deg,#2f8a5f,#1f7a54)}
+
+  /* ---------- 场景卡 ---------- */
+  .card{
+    background:var(--paper-2);border:1px solid var(--line);border-radius:var(--radius);
+    padding:22px 20px;box-shadow:var(--shadow);
+    animation:rise .42s cubic-bezier(.2,.7,.3,1) both;
+  }
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  .act-tag{font-size:11.5px;letter-spacing:.14em;color:var(--gold);margin-bottom:8px}
+  .scene-title{font-family:"Songti SC","Noto Serif SC",serif;font-size:22px;margin:0 0 12px;letter-spacing:.04em;font-weight:700}
+  .scene-text{font-size:15px;color:var(--ink-2);margin:0 0 20px;white-space:pre-wrap}
+  .scene-text b{color:var(--ink)}
+
+  .opts{display:flex;flex-direction:column;gap:10px}
+  .opt{
+    position:relative;text-align:left;font:inherit;cursor:pointer;
+    background:#fff;border:1px solid var(--line);border-radius:12px;
+    padding:14px 15px 14px 46px;font-size:14.5px;line-height:1.6;color:var(--ink);
+    transition:border-color .18s,box-shadow .18s,transform .12s,background .18s;
+  }
+  .opt:hover{border-color:rgba(168,35,31,.35);box-shadow:0 6px 18px -12px rgba(43,38,34,.4)}
+  .opt:active{transform:scale(.995)}
+  .opt .k{
+    position:absolute;left:14px;top:14px;width:22px;height:22px;border-radius:6px;
+    display:grid;place-items:center;font-size:12px;font-weight:700;
+    background:rgba(168,35,31,.08);color:var(--red);font-variant-numeric:tabular-nums;
+  }
+  .opt[disabled]{cursor:default;opacity:.55}
+  .opt.picked{border-color:var(--red);background:rgba(168,35,31,.04);opacity:1}
+
+  /* ---------- 反馈 ---------- */
+  .feedback{margin-top:18px;padding-top:18px;border-top:1px dashed var(--line);animation:rise .4s both}
+  .fb-head{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700;margin-bottom:8px;letter-spacing:.04em}
+  .fb-head.good{color:var(--good)} .fb-head.bad{color:var(--bad)} .fb-head.mid{color:var(--mid)}
+  .fb-head .dot{width:7px;height:7px;border-radius:99px;background:currentColor;flex:0 0 auto}
+  .fb-text{font-size:14.5px;color:var(--ink-2);margin:0 0 14px;white-space:pre-wrap}
+  .fb-text b{color:var(--ink)}
+
+  .deltas{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+  .chip{font-size:12px;padding:3px 9px;border-radius:999px;background:rgba(43,38,34,.05);color:var(--ink-2);font-variant-numeric:tabular-nums}
+  .chip.up{background:rgba(31,122,84,.1);color:var(--good)}
+  .chip.dn{background:rgba(168,35,31,.09);color:var(--bad)}
+
+  .know{
+    background:linear-gradient(180deg,rgba(185,139,58,.09),rgba(185,139,58,.045));
+    border:1px solid rgba(185,139,58,.28);border-left:3px solid var(--gold);
+    border-radius:10px;padding:13px 15px;margin-bottom:18px;
+  }
+  .know-top{font-size:11px;letter-spacing:.16em;color:var(--gold);margin-bottom:5px;font-weight:700}
+  .know-title{font-size:14.5px;font-weight:700;margin-bottom:6px;letter-spacing:.02em}
+  .know-note{font-size:13.5px;color:var(--ink-2);line-height:1.75}
+  .know-note b{color:var(--ink)}
+
+  /* ---------- 结局 ---------- */
+  #end{display:none}
+  .end-badge{
+    display:inline-block;font-size:11.5px;letter-spacing:.2em;color:var(--red);
+    border:1px solid rgba(168,35,31,.3);border-radius:999px;padding:5px 13px;margin-bottom:16px;
+  }
+  .end-title{font-family:"Songti SC","Noto Serif SC",serif;font-size:31px;margin:0 0 10px;letter-spacing:.06em;line-height:1.3}
+  .end-desc{font-size:14.5px;color:var(--ink-2);margin:0 0 18px;white-space:pre-wrap}
+  .end-desc b{color:var(--ink)}
+  .score-row{display:flex;align-items:baseline;gap:8px;margin:18px 0 6px}
+  .score-num{font-family:"Songti SC",serif;font-size:38px;font-weight:700;color:var(--red);line-height:1;font-variant-numeric:tabular-nums}
+  .score-unit{font-size:12.5px;color:var(--ink-3)}
+  .radar{display:flex;flex-direction:column;gap:11px;margin:20px 0}
+  .radar-row{display:grid;grid-template-columns:56px 1fr 34px;align-items:center;gap:10px;font-size:12.5px;color:var(--ink-2)}
+  .radar-row .bar{height:7px}
+  .radar-row span:last-child{text-align:right;color:var(--ink-3);font-variant-numeric:tabular-nums}
+
+  .cards-list{margin:8px 0 20px}
+  .cl-item{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid rgba(43,38,34,.07);font-size:13px;color:var(--ink-2)}
+  .cl-item:last-child{border-bottom:0}
+  .cl-ch{flex:0 0 auto;color:var(--red);font-weight:700;font-size:12px;padding-top:1px}
+  .cl-pt{color:var(--ink)}
+  .section-label{font-size:11px;letter-spacing:.16em;color:var(--ink-3);margin:24px 0 6px;font-weight:700}
+
+  .author{
+    margin-top:26px;padding-top:14px;border-top:1px solid var(--line);
+    font-size:11.5px;color:var(--ink-3);text-align:center;line-height:1.9;
+  }
+  .author b{color:var(--ink-2);font-weight:600}
+
+  @media (max-width:380px){
+    .cover-title{font-size:33px}
+    .bars{gap:5px}
+    .bar-label{font-size:10px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ================= 封面 ================= -->
+  <section id="cover">
+    <div class="course-chip serif">《思想道德与法治》· 交互式剧情小游戏</div>
+    <h1 class="cover-title">抉择<em>·</em>青春</h1>
+    <p class="cover-sub serif">14 个真实的校园抉择，41 张知识卡，1 个属于你的人生画像</p>
+    <div class="cover-rule"></div>
+
+    <p class="lead">
+      思想政治理论不是背下来的一段话，而是<b>站在岔路口时的那一次选择</b>。
+      在接下来的故事里，你是一名刚刚步入大学的新生。从开学第一课到毕业去向，
+      每一次抉择都会悄悄改变你看待世界的角度。
+    </p>
+
+    <div class="meta-grid">
+      <div class="meta-item"><b>对应课程</b>《思想道德与法治》</div>
+      <div class="meta-item"><b>覆盖章节</b>绪论 + 第一至第六章</div>
+      <div class="meta-item"><b>核心知识点</b>人生观 · 理想信念 · 中国精神<br>核心价值观 · 道德 · 法治素养</div>
+      <div class="meta-item"><b>难度 / 时长</b>无门槛 · 约 8 分钟</div>
+    </div>
+
+    <div style="height:22px"></div>
+    <button class="btn" id="startBtn">走进我的大学 · 开始</button>
+    <p class="hint">键盘按 1 / 2 / 3 也可选择 · 支持手机与电脑</p>
+
+    <div class="author">
+      <b>河北工业大学 · ××学院 ××班 ×××</b><br>
+      承诺原创 · 非商业教学使用
+    </div>
+  </section>
+
+  <!-- ================= 游戏 ================= -->
+  <section id="game">
+    <div class="status">
+      <div class="status-top">
+        <div><span class="act" id="stAct">第一幕</span> · <span id="stActName">启程</span></div>
+        <div id="stProgress">1 / 14</div>
+      </div>
+      <div class="bars">
+        <div>
+          <div class="bar-label"><span>信念</span><span id="v0">50</span></div>
+          <div class="bar b1"><i id="p0"></i></div>
+        </div>
+        <div>
+          <div class="bar-label"><span>品德</span><span id="v1">50</span></div>
+          <div class="bar b2"><i id="p1"></i></div>
+        </div>
+        <div>
+          <div class="bar-label"><span>法治</span><span id="v2">50</span></div>
+          <div class="bar b3"><i id="p2"></i></div>
+        </div>
+        <div>
+          <div class="bar-label"><span>担当</span><span id="v3">50</span></div>
+          <div class="bar b4"><i id="p3"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="sceneCard">
+      <div class="act-tag" id="actTag">第一幕 · 启程</div>
+      <h2 class="scene-title" id="sceneTitle"></h2>
+      <p class="scene-text" id="sceneText"></p>
+      <div class="opts" id="opts"></div>
+      <div id="fbSlot"></div>
+    </div>
+
+    <div class="author">
+      <b id="authorLine">河北工业大学 · ××学院 ××班 ×××</b><br>
+      《思想道德与法治》课程实践作品
+    </div>
+  </section>
+
+  <!-- ================= 结局 ================= -->
+  <section id="end">
+    <div class="card">
+      <div class="end-badge serif">你的人生画像</div>
+      <h2 class="end-title" id="endTitle"></h2>
+      <p class="end-desc" id="endDesc"></p>
+
+      <div class="score-row">
+        <div class="score-num" id="endScore">0</div>
+        <div class="score-unit">/ 400 综合成长值</div>
+      </div>
+      <div class="radar" id="endRadar"></div>
+
+      <div class="section-label">你解锁的思政知识卡</div>
+      <div class="cards-list" id="endCards"></div>
+
+      <div class="section-label">章节覆盖</div>
+      <p class="lead" id="endChapters" style="margin-bottom:18px"></p>
+
+      <button class="btn" id="againBtn">再走一次大学生活</button>
+      <div style="height:10px"></div>
+      <button class="btn ghost" id="backBtn">回到封面</button>
+    </div>
+    <div class="author">
+      <b id="authorLine2">河北工业大学 · ××学院 ××班 ×××</b><br>
+      《思想道德与法治》课程实践作品
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* =========================================================
+   ①  想改成自己的信息，只改这里
+   ========================================================= */
+const CONFIG = {
+  author: "河北工业大学 · ××学院 ××班 ×××",
+  course: "《思想道德与法治》"
+};
+
+/* =========================================================
+   ②  剧本数据：每一幕 = 场景，每个场景 = 若干选项
+   delta: {信念, 品德, 法治, 担当}   type: good / mid / bad
+   card:  解锁的知识卡（章节 + 知识点 + 一句话解读）
+   ========================================================= */
+const ACTS = [
+{
+  no:"第一幕", name:"启程", sub:"来到大学的第一天",
+  scenes:[
+    {
+      title:"开学第一课",
+      text:"思政课老师在黑板上写下三个问题，然后转过身来点了你的名字：\n“同学，你为什么上大学？”\n\n教室忽然安静下来，三十多双眼睛看向你。",
+      opts:[
+        { k:"a", text:"“为了拿个文凭，将来好找工作。”",
+          type:"mid", delta:{信念:3,品德:0,法治:0,担当:-3},
+          fb:"这是很现实的回答，不必羞愧。但如果把大学仅仅当成一张“就业门票”，一旦就业形势变化、或者成绩不如意，人就容易失去支撑。\n<b>人生目的决定人生道路</b>——它回答的不是“我要什么”，而是“我要成为一个什么样的人”。",
+          card:{ch:"第一章", pt:"人生目的决定人生道路", note:"人生观的核心是人生目的。目的不同，对待学习、挫折、他人的态度就完全不同。"} },
+        { k:"b", text:"“为了让自己成为能担事、能扛事的人。”",
+          type:"good", delta:{信念:10,品德:6,法治:0,担当:10},
+          fb:"这个回答里，已经藏着一个成熟的<strong>人生价值观</strong>：人的价值不只在于“我得到了什么”，更在于“我为别人、为社会做了什么”。\n这也正是这门课希望你想清楚的事。",
+          card:{ch:"第一章", pt:"人生价值：贡献与满足的统一", note:"人生价值包括自我价值与社会价值。评价一个人的人生价值，主要看他的活动是否符合社会发展规律、是否促进了社会进步。"} },
+        { k:"c", text:"“没想过，大家都上大学，我就来了。”",
+          type:"bad", delta:{信念:-8,品德:0,法治:0,担当:-8},
+          fb:"随大流并不可耻，但<b>盲从意味着把人生的方向盘交给了别人</b>。\n大学和高中最大的不同，是再也没有人替你规定“下一步该干什么”。人生态度需要自己选择，这是成长的第一道坎。",
+          card:{ch:"第一章", pt:"人生态度需要自觉选择", note:"人生目的是“为什么活”，人生态度是“怎样活”。积极进取还是消极懈怠，是一个需要自觉作出选择的问题。"} }
+      ]
+    },
+    {
+      title:"班委竞选",
+      text:"辅导员在群里招募班长：收发通知、组织活动、处理宿舍矛盾，事情琐碎，还容易得罪人。\n\n报名表还有半小时截止。",
+      opts:[
+        { k:"a", text:"我报。琐碎的事总得有人做。",
+          type:"good", delta:{信念:6,品德:8,法治:0,担当:10},
+          fb:"“总得有人做”——这句话里有一种很朴素的责任感。\n新时代青年的“担当”，并不总是轰轰烈烈的。它常常就是<b>把一件没人愿意做的具体小事，稳定地做下去</b>。",
+          card:{ch:"绪论", pt:"担当民族复兴大任的时代新人", note:"“时代新人”要有理想、敢担当、能吃苦、肯奋斗。担当不是口号，而是在具体岗位上把事情做成。"} },
+        { k:"b", text:"想当，但怕耽误学习，还是算了。",
+          type:"mid", delta:{信念:0,品德:0,法治:0,担当:-2},
+          fb:"权衡时间成本是理性的。但值得追问一句：你真的会把这半小时拿去学习吗？\n很多“怕耽误”的背后，其实是<b>怕麻烦、怕出错</b>。责任感和能力一样，是在承担中长出来的。",
+          card:{ch:"第一章", pt:"人生矛盾：得与失", note:"人生中的得与失总是相伴相生。只算“失”不算“得”，就容易被眼前的舒适困住。"} },
+        { k:"c", text:"先找学长打招呼，让他在群里帮我说话。",
+          type:"bad", delta:{信念:-4,品德:-10,法治:-4,担当:-4},
+          fb:"竞选本身没有问题，问题在于<b>用私下运作替代公开竞争</b>。\n这触碰的是“公正”与“诚信”两条底线。今天可以为一个小岗位破坏规则，明天就可能在一个更大的位置上习惯性地绕开规则。",
+          card:{ch:"第四章", pt:"社会主义核心价值观：公正与诚信", note:"公正是社会层面的价值取向，诚信是公民个人层面的价值准则。规则意识要从最小的事开始建立。"} }
+      ]
+    },
+    {
+      title:"深夜的宿舍",
+      text:"室友连着三天开黑到凌晨两点，语音外放。你明天早八有课，已经连续两晚只睡五小时。\n\n第四天晚上，耳机里的枪声又响了。",
+      opts:[
+        { k:"a", text:"忍着，戴上耳塞继续睡。",
+          type:"mid", delta:{信念:0,品德:2,法治:0,担当:-4},
+          fb:"你用“忍”维持了表面和平，代价是长期睡眠不足和积累的怨气。\n回避矛盾并不会让矛盾消失，只会让它<b>换一种更难处理的方式出现</b>——某天你可能因为一件小事突然爆发。",
+          card:{ch:"第一章", pt:"人生矛盾：顺与逆", note:"顺境与逆境都是人生的常态。真正的成长，是在不利条件中主动寻找改变处境的办法，而不是被动忍受。"} },
+        { k:"b", text:"第二天找个时间坐下来谈，一起定个宿舍公约。",
+          type:"good", delta:{信念:4,品德:10,法治:4,担当:8},
+          fb:"把“你有问题”换成“我们怎么办”，矛盾就从对立变成了协作。\n宿舍是公共场所，<b>个人自由的边界是他人的权利</b>。一起定规则、一起遵守，这就是最小单位的公共生活训练。",
+          card:{ch:"第五章", pt:"社会公德：遵纪守法、文明礼貌", note:"社会公德是公共生活中最简单、最基本的行为准则。尊重他人的休息权，是最基础的公共文明。"} },
+        { k:"c", text:"直接在班级群里点名骂他一顿。",
+          type:"bad", delta:{信念:-2,品德:-8,法治:-6,担当:0},
+          fb:"你占着理，但方式越界了。公开辱骂、人身攻击，已经从“维权”变成了“侵权”。\n<b>行使自己的权利，不得损害他人的合法权益</b>——这是法治思维最基本的一条。",
+          card:{ch:"第六章", pt:"依法行使权利，不得损害他人合法权益", note:"权利的行使有边界。维权方式不当，有理也会变成无理，甚至要承担法律责任。"} }
+      ]
+    }
+  ]
+},
+{
+  no:"第二幕", name:"淬炼", sub:"理想与现实的第一次碰撞",
+  scenes:[
+    {
+      title:"挂科之后",
+      text:"高数期中 48 分。辅导员说，这个成绩会影响转专业和保研。\n\n宿舍里，有人劝你“趁早认清自己不是读书的料”，也有人说“有门路能改分”。",
+      opts:[
+        { k:"a", text:"去办公室找老师问清楚错在哪，重新排一份学习计划。",
+          type:"good", delta:{信念:9,品德:4,法治:4,担当:8},
+          fb:"把失败当成“信息”而不是“判决”，这是最关键的转变。48 分告诉你的是“这套方法不管用”，而不是“你不行”。\n<b>逆境本身不是财富，对逆境的正确态度才是。</b>",
+          card:{ch:"第一章", pt:"正确对待人生矛盾：逆境与顺境", note:"逆境可以磨炼意志、激发潜能，也可能让人消沉。区别在于是否主动分析原因、调整方法。"} },
+        { k:"b", text:"算了，我可能真的不适合这个专业。",
+          type:"bad", delta:{信念:-10,品德:0,法治:0,担当:-6},
+          fb:"一次期中考试就被用来给自己“定终身”，这个结论下得太快了。\n理想信念的价值，恰恰体现在<b>现实不配合你的时候</b>。顺风顺水时谈理想，谁都会谈。",
+          card:{ch:"第二章", pt:"理想信念是精神之“钙”", note:"理想信念提供方向感和支撑力。缺乏信念的人，容易在一次挫折后就否定全部自我。"} },
+        { k:"c", text:"先找人把分数改过来，其他的以后再说。",
+          type:"bad", delta:{信念:-8,品德:-14,法治:-12,担当:-4},
+          fb:"这一步迈出去，代价远不止一门课。篡改成绩可能构成<b>违纪甚至违法</b>，而更深的代价是：你会记住“原来规则是可以绕开的”。\n第一次绕开规则的人，很难只绕开一次。",
+          card:{ch:"第六章", pt:"法治思维：规则意识与底线意识", note:"法治思维要求把法律和规则作为判断是非的第一标准。底线一旦突破，代价往往远超收益。"} }
+      ]
+    },
+    {
+      title:"一条刷屏的短视频",
+      text:"深夜，一条短视频在群里疯传：画面模糊，配文写着“某地出大事了，官方封锁消息”。\n\n评论区已经炸了，同学@你：“快转，别让更多人被蒙在鼓里。”",
+      opts:[
+        { k:"a", text:"先转到所有群，这种事不能沉默。",
+          type:"bad", delta:{信念:-2,品德:-8,法治:-10,担当:-2},
+          fb:"“不能沉默”的正义感很珍贵，但它被用错了地方。\n未经核实的信息一旦扩散，就可能造成真实的社会伤害，而转发者也要承担相应责任。<b>善良的动机，不能替代对事实的核实。</b>",
+          card:{ch:"第五章", pt:"网络生活中的道德要求", note:"网络空间不是法外之地。不造谣、不信谣、不传谣，是网络道德的基本要求。"} },
+        { k:"b", text:"先查官方通报和原始信源，再决定要不要说。",
+          type:"good", delta:{信念:4,品德:10,法治:12,担当:6},
+          fb:"你做了三件事：找原始信源、找权威发布、判断证据是否支持结论。这就是<b>法治思维中的“证据意识”</b>。\n在信息过载的时代，克制比冲动更需要勇气。",
+          card:{ch:"第六章", pt:"法治思维：重视证据", note:"法治思维要求以事实为依据、以法律为准绳。判断一件事，先看证据是否成立、来源是否可靠。"} },
+        { k:"c", text:"不转，但也不管，划过去继续睡。",
+          type:"mid", delta:{信念:-2,品德:2,法治:2,担当:-6},
+          fb:"你守住了“不传谣”的底线，但停在了这一步。\n如果确认是谣言，<b>向平台举报、提醒转发过的同学</b>，成本很低，却能真正减少伤害。责任感的差别，往往就在这“多走一步”。",
+          card:{ch:"第五章", pt:"网络道德：从“不做错”到“做对”", note:"道德要求有层次：不伤害是底线，主动维护公共利益是更高追求。"} }
+      ]
+    },
+    {
+      title:"日入三百的兼职",
+      text:"兼职群里有人发消息：“手机操作，日结三百，先垫付小额本金，返现秒到。”\n\n对方还发来几张别人收款成功的截图。",
+      opts:[
+        { k:"a", text:"先垫两百试试，赚了再说。",
+          type:"bad", delta:{信念:-2,品德:-4,法治:-12,担当:0},
+          fb:"“垫付本金 + 高额返现”是刷单诈骗最典型的开场。前几次的小额返现是钓鱼的饵。\n不只是被骗的问题：<b>参与刷单本身也是违法行为</b>，它虚构交易、误导消费者，你可能在不知不觉中成为违法链条的一环。",
+          card:{ch:"第六章", pt:"依法维护自身权益，远离违法活动", note:"刷单炒信违反《反不正当竞争法》等规定。贪图小利参与其中，既可能被骗，也可能担责。"} },
+        { k:"b", text:"拒绝，并在群里提醒其他同学这是刷单诈骗。",
+          type:"good", delta:{信念:4,品德:8,法治:12,担当:6},
+          fb:"你同时守住了两件事：<b>自己不被骗</b>，以及<b>不让别人被骗</b>。\n这背后是“诚实劳动”的价值观——钱要通过创造真实价值获得，而不是靠钻规则的漏洞。",
+          card:{ch:"第五章", pt:"职业道德：诚实劳动", note:"诚实劳动是职业道德的基本要求。任何以欺骗手段获取利益的行为，都在透支社会的信任成本。"} },
+        { k:"c", text:"不太信，但也不说，反正不关我事。",
+          type:"mid", delta:{信念:0,品德:0,法治:2,担当:-4},
+          fb:"你没有上当，这很好。但“不关我事”这四个字，正是很多人被骗时无人提醒的原因。\n<b>公共生活中的善意提醒，是一种低成本的道德行为。</b>",
+          card:{ch:"第五章", pt:"社会公德的实践性", note:"道德不是抽象知识，而是在具体情境中的实际行动。一句提醒，可能就是别人的一次止损。"} }
+      ]
+    },
+    {
+      title:"支教招募",
+      text:"学院招募暑期支教队，去西部一所乡村小学，为期三周，没有报酬。\n\n同一时间，你拿到了一家公司的暑期实习 offer——那段经历将来写进简历会好看得多。",
+      opts:[
+        { k:"a", text:"报名支教。简历可以明年再写。",
+          type:"good", delta:{信念:9,品德:10,法治:0,担当:12},
+          fb:"你把“对社会有用”放在了“对自己有利”之前，这正是<b>人生价值中社会价值优先</b>的体现。\n三周改变不了乡村教育，但它会改变你看待这个国家的坐标系——你会第一次真切地知道，课本上的“共同富裕”“乡村振兴”落在什么地方。",
+          card:{ch:"第三章", pt:"中国精神：以爱国主义为核心的民族精神", note:"爱国不是抽象情感，而是把个人理想融入国家发展和人民需要之中。"} },
+        { k:"b", text:"支教是情怀，简历才是现实，去实习。",
+          type:"mid", delta:{信念:-4,品德:-6,法治:0,担当:-6},
+          fb:"实习当然有价值。但把“情怀”和“现实”对立起来，是一个常见的误区。\n<b>个人价值与社会价值不是二选一</b>：真正走得远的人，通常是把两者统一起来的人。问题不在于选哪个，而在于你是否只剩下了“对我有没有用”这一把尺子。",
+          card:{ch:"第一章", pt:"人生价值：个人价值与社会价值的统一", note:"社会价值是人生价值的基础。只追求个人满足，人生道路会越走越窄。"} },
+        { k:"c", text:"想去，但三周太长——先报名学校的周末志愿活动试试。",
+          type:"good", delta:{信念:4,品德:7,法治:0,担当:5},
+          fb:"这是一个非常真实的答案：有善意，也有顾虑。\n而你没有停在“想去”上，而是<b>从能做的小事开始</b>。道德成长的路径从来不是一次壮举，而是一连串可持续的行动。",
+          card:{ch:"第五章", pt:"志愿服务：从身边做起", note:"志愿服务是道德实践的重要形式。不必等到“有能力”再开始，从身边可及的小事做起更有意义。"} }
+      ]
+    }
+  ]
+},
+{
+  no:"第三幕", name:"担当", sub:"把个人放进时代里",
+  scenes:[
+    {
+      title:"好看的数据",
+      text:"大创项目做了三个月，实验结果始终不理想。组会上，队友小声说：\n“把这两组数据调一下，图表就好看了，反正没人复现。”\n\n指导老师在群里催这周交中期报告。",
+      opts:[
+        { k:"a", text:"不行，如实写，并在报告里分析失败原因。",
+          type:"good", delta:{信念:6,品德:14,法治:6,担当:8},
+          fb:"“如实写”意味着你要承担一个不好看的报告。但<b>科研诚信这件事，只有零次和无数次</b>。\n而且从结果看：一个能说明“为什么失败”的报告，往往比一张漂亮却站不住的图表更有价值。",
+          card:{ch:"第五章", pt:"职业道德：诚实守信", note:"学术诚信是职业道德在科研活动中的体现。篡改、伪造数据是最严重的学术不端行为之一。"} },
+        { k:"b", text:"就调一点，反正结论方向是对的。",
+          type:"bad", delta:{信念:-6,品德:-14,法治:-8,担当:-4},
+          fb:"“反正结论方向是对的”——这句话是学术不端的标准开端。\n当结论先于证据，研究就不再是研究。<b>用错误的方式去证明一个正确的结论，最终会摧毁这个结论的可信度。</b>",
+          card:{ch:"第四章", pt:"诚信：立身之本", note:"诚信是社会主义核心价值观在公民层面的要求，也是学术活动不可让渡的底线。"} },
+        { k:"c", text:"先找老师聊，说清楚遇到的技术困难。",
+          type:"good", delta:{信念:4,品德:8,法治:2,担当:6},
+          fb:"把问题抛给有经验的人，比自己硬扛或走捷径都更成熟。\n求助不是无能，而是<b>对结果负责的表现</b>——你真正在意的是把事做成，而不是把面子保住。",
+          card:{ch:"第五章", pt:"职业道德：敬业", note:"敬业是对工作认真负责的态度，包括正视困难、主动求解，而不是掩盖问题。"} }
+      ]
+    },
+    {
+      title:"评论区里的玩笑",
+      text:"一个科普视频下面，有人拿某位牺牲的戍边烈士编段子，评论区一片“哈哈哈”。\n\n你认得那个名字——去年新闻里播过。",
+      opts:[
+        { k:"a", text:"划走，网上什么人都有。",
+          type:"mid", delta:{信念:-2,品德:0,法治:0,担当:-6},
+          fb:"你没有参与，也没有纵容。但当<b>沉默成为多数</b>时，玩笑就会被当成常态。\n表达不需要激烈，一句“这个不好笑，他是烈士”，就足以改变评论区的气氛。",
+          card:{ch:"第三章", pt:"爱国情感与民族尊严", note:"对英雄烈士的尊崇，是民族精神的重要体现。维护民族尊严，需要每个人的具体行动。"} },
+        { k:"b", text:"把事实讲清楚，然后点举报。",
+          type:"good", delta:{信念:8,品德:10,法治:8,担当:12},
+          fb:"你做了两件正确的事：<b>用事实纠正认知，用规则约束行为</b>。\n《英雄烈士保护法》明确规定，禁止歪曲、丑化、亵渎、否定英雄烈士事迹和精神。这不是“上纲上线”，而是有法可依。",
+          card:{ch:"第六章", pt:"英雄烈士保护法", note:"《中华人民共和国英雄烈士保护法》明确禁止以侮辱、诽谤等方式侵害英雄烈士的姓名、肖像、名誉、荣誉。"} },
+        { k:"c", text:"跟着发一个梗，反正只是开玩笑。",
+          type:"bad", delta:{信念:-10,品德:-14,法治:-10,担当:-6},
+          fb:"“只是开玩笑”是最常见的辩解，也是最站不住的辩解。\n当玩笑的对象是一个为国家付出生命的人时，它伤害的已经不只是一个人，而是一个社会的<b>价值共识</b>。",
+          card:{ch:"第三章", pt:"中国精神：崇尚英雄、捍卫英雄", note:"一个有希望的民族不能没有英雄。尊崇英雄是社会共同的价值底线，不容以“娱乐”之名侵蚀。"} }
+      ]
+    },
+    {
+      title:"暑假的选择",
+      text:"大二暑假，三个选项摆在面前：\n① 一线城市大厂实习，日薪 200；\n② 家乡县城的助农项目，帮农户做直播和销路调研，补贴很少；\n③ 在家待着，好好休息。",
+      opts:[
+        { k:"a", text:"去大厂。先把自己练强，才有能力谈别的。",
+          type:"mid", delta:{信念:2,品德:0,法治:0,担当:2},
+          fb:"这是一个合理的选择，不必批判。但要警惕一种滑坡：<b>“等我强大了再回报社会”很容易变成永远不开始</b>。\n能力确实是承担责任的前提，但责任感不会在某一天自动降临，它是在一次次选择中长出来的。",
+          card:{ch:"第二章", pt:"理想与现实的辩证统一", note:"理想需要通过实践一步步实现。把理想无限期推给“以后”，实际上等于放弃了它。"} },
+        { k:"b", text:"回家乡，去看看真实的县域经济是什么样。",
+          type:"good", delta:{信念:9,品德:8,法治:0,担当:12},
+          fb:"你选择了一个“简历上不好看”的暑假，但你会看到<strong>另一个中国</strong>：县城的产业、农户的账本、基层干部的日常。\n<b>中国特色社会主义共同理想</b>不是一句口号，它需要有人真的知道这片土地在发生什么。",
+          card:{ch:"第二章", pt:"中国特色社会主义共同理想", note:"共同理想是把我国建设成为富强民主文明和谐美丽的社会主义现代化强国。它需要青年在具体岗位上参与。"} },
+        { k:"c", text:"在家待着。上学太累了，先躺三个月。",
+          type:"bad", delta:{信念:-8,品德:-4,法治:0,担当:-12},
+          fb:"休息是正当的需要，三个月的彻底空白则是另一回事。\n<b>奋斗不是要你把每一天都填满，而是不要让“暂停”变成“停摆”。</b>哪怕只是读完几本书、学会一项技能，假期也会有重量。",
+          card:{ch:"绪论", pt:"新时代是奋斗者的时代", note:"“能吃苦、肯奋斗”是时代新人的重要特质。奋斗精神需要在日常中持续养成。"} }
+      ]
+    },
+    {
+      title:"走廊里的老人",
+      text:"教学楼走廊，一位老人突然摔倒，额头磕在台阶上。\n\n周围七八个人停下来看，没有人上前。有人小声说：“别扶，现在讹人的多。”",
+      opts:[
+        { k:"a", text:"先打开手机录像，同时喊人一起扶，并打 120。",
+          type:"good", delta:{信念:4,品德:14,法治:10,担当:10},
+          fb:"你这个做法同时解决了三件事：<b>救人、留证、聚集见证人</b>。\n《民法典》第 184 条规定，因自愿实施紧急救助行为造成受助人损害的，救助人不承担民事责任——“好人条款”就是要打消这种顾虑。而录像和见证人，是让善意被保护的最朴素方式。",
+          card:{ch:"第六章", pt:"民法典第184条“好人条款”", note:"自愿实施紧急救助造成受助人损害的，救助人不承担民事责任。法律为善行兜底。"} },
+        { k:"b", text:"多一事不如少一事，快步走开。",
+          type:"bad", delta:{信念:-4,品德:-12,法治:0,担当:-10},
+          fb:"这个选择里有恐惧，也有算计。恐惧可以理解，但<b>当所有人都这样算计时，我们每个人都会成为那个躺在地上没人扶的人</b>。\n社会公德不是给别人的，是给自己留的后路。",
+          card:{ch:"第五章", pt:"社会公德：助人为乐", note:"助人为乐是社会公德的重要内容。一个社会的温度，取决于多数人在关键时刻的选择。"} },
+        { k:"c", text:"大声喊“有没有人一起帮忙”，然后一起扶。",
+          type:"good", delta:{信念:4,品德:10,法治:4,担当:8},
+          fb:"你破解了“旁观者效应”最关键的一环：<b>把责任明确到具体的人</b>。\n“有没有人帮忙”往往无人应答，而“穿蓝衣服的同学，帮我打 120”几乎一定会有人行动。这是很实用的公共生活智慧。",
+          card:{ch:"第五章", pt:"公共生活中的责任担当", note:"在公共场合主动承担组织责任，是把道德意愿转化为有效行动的关键能力。"} }
+      ]
+    }
+  ]
+},
+{
+  no:"第四幕", name:"远行", sub:"成为怎样的人",
+  scenes:[
+    {
+      title:"毕业的去向",
+      text:"大四，三道门同时打开：\n一家大厂给出 25 万年薪；西部计划招募去基层服务两年；还有一个自己一直想做的创业项目。",
+      opts:[
+        { k:"a", text:"去西部计划，到基层去待两年。",
+          type:"good", delta:{信念:10,品德:8,法治:0,担当:12},
+          fb:"这个选择的“性价比”按市场算是负的，但<b>人不是只按性价比活着的</b>。\n到基层去，你会见到政策落地时最真实的摩擦，也会第一次意识到：你学的东西，真的可以让某件具体的事变好一点。",
+          card:{ch:"第二章", pt:"把个人理想融入社会理想", note:"个人理想只有同国家民族的命运相结合，才会有持久的生命力。"} },
+        { k:"b", text:"去大厂。先积累资本和能力。",
+          type:"mid", delta:{信念:4,品德:0,法治:0,担当:2},
+          fb:"这是一个被无数人验证过的路径，本身没有错。\n只是建议你在心里留一个问题：<b>十年后，除了职级和薪资，你还希望自己拥有什么？</b>把这个问题留着，它会在某个时刻提醒你。",
+          card:{ch:"第一章", pt:"人生价值的评价尺度", note:"评价人生价值，不能只看物质贡献的大小，还要看一个人的活动是否符合社会发展需要。"} },
+        { k:"c", text:"先不选，回家躺一年再说。",
+          type:"bad", delta:{信念:-10,品德:0,法治:0,担当:-12},
+          fb:"“再等等”听起来是在给自己留余地，实际上是把选择权交给了时间。\n<b>迷茫不可怕，可怕的是用“不选择”来回避迷茫。</b>去试错，哪怕试错本身也是答案。",
+          card:{ch:"绪论", pt:"青春是用来奋斗的", note:"回避选择会让人生失去方向感。在行动中认识自己，比在原地空想更有效。"} }
+      ]
+    },
+    {
+      title:"一份思想汇报",
+      text:"组织上要求交一份思想汇报。你在搜索框里输入关键词，跳出几万条“标准模板”。\n\n其中一份写得很好，只要改个名字就能交。",
+      opts:[
+        { k:"a", text:"改一下名字交上去，反正内容都是对的。",
+          type:"bad", delta:{信念:-8,品德:-12,法治:-4,担当:-4},
+          fb:"思想汇报的意义不在于“交一份正确的文字”，而在于<b>逼你把脑子里模糊的想法说清楚</b>。\n抄一份漂亮的空话，等于放弃了一次真正的自我审视。而信仰如果只是复述别人的句子，它就不是信仰。",
+          card:{ch:"第二章", pt:"信仰的确立需要自觉", note:"马克思主义信仰不是背诵结论，而是在理解和实践中逐步确立的。"} },
+        { k:"b", text:"老老实实写自己这半年的困惑和变化。",
+          type:"good", delta:{信念:12,品德:10,法治:0,担当:6},
+          fb:"写自己的困惑，需要勇气——因为它可能显得“不够先进”。\n但<b>真实的思考，哪怕幼稚，也比漂亮的口号有价值</b>。一个能说出自己为什么动摇、又为什么坚持的人，才真正拥有立场。",
+          card:{ch:"第二章", pt:"理想信念的确立是一个过程", note:"信念是在认识、比较、实践和反思中逐步坚定的。承认困惑，恰恰是走向坚定的开始。"} }
+      ]
+    },
+    {
+      title:"最后一问",
+      text:"毕业典礼结束，你在校门口站了很久。\n\n四年前那个被老师点名回答问题的下午，好像就在昨天。\n\n如果十年后，有人用一句话介绍你，你希望是哪一句？",
+      opts:[
+        { k:"a", text:"“他赚了很多钱。”",
+          type:"mid", delta:{信念:-2,品德:-2,法治:0,担当:-4},
+          fb:"财富是能力的证明之一，但它是<b>结果，不是意义</b>。\n如果一个人的全部介绍只剩下资产数字，那说明这十年里，他的生活里没有别的东西长出来。",
+          card:{ch:"第一章", pt:"人生价值不等于物质财富", note:"物质贡献是人生价值的重要方面，但不是唯一尺度。精神贡献同样重要。"} },
+        { k:"b", text:"“他让身边的人过得更好了一点。”",
+          type:"good", delta:{信念:8,品德:12,法治:0,担当:10},
+          fb:"这是一个很朴素、也很难做到的介绍。它意味着你在很多个不被看见的时刻，选择了多承担一点。\n<b>人的价值，最终是在与他人的关系中被确认的。</b>",
+          card:{ch:"第一章", pt:"人生价值：社会价值是基础", note:"一个人的社会价值，体现为他对他人、对社会的贡献。这是评价人生价值的根本尺度。"} },
+        { k:"c", text:"“他一直在做自己相信的事。”",
+          type:"good", delta:{信念:12,品德:6,法治:4,担当:6},
+          fb:"“相信”两个字很难，因为它意味着你要为它付出代价。\n<b>理想信念是精神之“钙”</b>——它不会让你的人生更容易，但会让你在难的时候知道自己为什么还在走。",
+          card:{ch:"第二章", pt:"理想信念是精神之钙", note:"有信念的人，在困难面前有支撑，在诱惑面前有定力。"} }
+      ]
+    }
+  ]
+}
+];
+
+/* =========================================================
+   ③  结局设定
+   ========================================================= */
+const ENDINGS = [
+  {
+    id:"era", title:"时代新人",
+    desc:"四年里，你在每一个不那么显眼的岔路口，都选择了<b>稍微难一点、但对得起自己</b>的那条路。\n你未必是成绩最好的那个，但你是同学愿意托付事情的那个。\n\n这门课想告诉你的道理，你已经用自己的选择说了一遍：<b>思想道德与法治不是写在纸上的条文，而是你站在岔路口时，身体做出的那个反应。</b>",
+    cond:s => s.信念>=72 && s.品德>=72 && s.法治>=68 && s.担当>=72
+  },
+  {
+    id:"sharp", title:"精致的利己主义者",
+    desc:"你很聪明，也很努力，几乎每一步都算得很清楚——只是那把尺子上，只有“对我有没有用”。\n\n需要提醒你的是：<b>人生价值不只有自我价值这一面。</b>只计算收益的人，短期往往走得更快，但很难走到别人愿意与他同路的地方。\n\n这不是道德审判，而是一个建议：留一点空间给“不划算”的事。",
+    cond:s => s.品德 < 55 || (s.信念>=65 && s.品德<68)
+  },
+  {
+    id:"walker", title:"还在路上的人",
+    desc:"你有时清醒，有时随波逐流；做过正确的选择，也妥协过几次。\n\n这其实是最接近真实的大多数。<b>没有人能一直正确</b>，重要的是你有没有在某个瞬间停下来问过自己：我到底想成为什么样的人。\n\n思想上的成长从来不是一次完成的，它是一辈子的反复。你已经开始了。",
+    cond:s => s.信念>=55 || s.品德>=55 || s.担当>=58
+  },
+  {
+    id:"bystander", title:"沉默的旁观者",
+    desc:"大多数时候，你选择了“不关我事”。这不是恶，但它让很多本来可以变好的事情，停在了原地。\n\n<b>当沉默成为多数，冷漠就会变成默认设置。</b>\n\n好消息是：改变并不需要你变成一个完全不同的人。下次遇到走廊上摔倒的老人，下次看到群里疯传的谣言——你只需要多做一步。",
+    cond:() => true
+  }
+];
+
+/* =========================================================
+   ④  逻辑（一般不用改）
+   ========================================================= */
+const S = {信念:50, 品德:50, 法治:50, 担当:50};
+const KEYS = ["信念","品德","法治","担当"];
+let flat = [], idx = 0, locked = false, cards = [], actOfScene = [];
+
+ACTS.forEach(a => a.scenes.forEach(sc => { flat.push(sc); actOfScene.push(a); }));
+
+const $ = id => document.getElementById(id);
+
+function paintBars(){
+  KEYS.forEach((k,i)=>{
+    const v = Math.max(0, Math.min(100, Math.round(S[k])));
+    $("v"+i).textContent = v;
+    $("p"+i).style.width = v + "%";
+  });
+}
+
+function render(){
+  locked = false;
+  const sc = flat[idx], act = actOfScene[idx];
+  $("actTag").textContent = act.no + " · " + act.name + " —— " + act.sub;
+  $("stAct").textContent = act.no;
+  $("stActName").textContent = act.name;
+  $("stProgress").textContent = (idx+1) + " / " + flat.length;
+  $("sceneTitle").textContent = sc.title;
+  $("sceneText").textContent = sc.text;
+  $("fbSlot").innerHTML = "";
+
+  const box = $("opts");
+  box.innerHTML = "";
+  sc.opts.forEach((o,i)=>{
+    const b = document.createElement("button");
+    b.className = "opt";
+    b.innerHTML = '<span class="k">' + (i+1) + '</span>' + o.text;
+    b.onclick = () => choose(i, b);
+    box.appendChild(b);
+  });
+  paintBars();
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+function choose(i, btn){
+  if (locked) return;
+  locked = true;
+  const sc = flat[idx], o = sc.opts[i];
+
+  document.querySelectorAll(".opt").forEach(el=>el.disabled = true);
+  btn.classList.add("picked");
+
+  const deltas = [];
+  KEYS.forEach(k=>{
+    const d = o.delta[k] || 0;
+    if (d !== 0 && S[k] !== undefined){
+      const before = Math.round(S[k]);
+      S[k] = Math.max(0, Math.min(100, S[k] + d));
+      const real = Math.round(S[k]) - before;
+      if (real !== 0) deltas.push({k, d: real});
+    }
+  });
+  paintBars();
+
+  if (o.card && !cards.some(c=>c.ch===o.card.ch && c.pt===o.card.pt)) cards.push(o.card);
+
+  const label = o.type === "good" ? "这是一个有分量的选择" : (o.type === "bad" ? "这个选择值得再想一想" : "这是一个可以理解、但不够完整的选择");
+
+  const fb = document.createElement("div");
+  fb.className = "feedback";
+  fb.innerHTML =
+    '<div class="fb-head ' + o.type + '"><span class="dot"></span>' + label + '</div>' +
+    '<p class="fb-text">' + o.fb + '</p>' +
+    '<div class="deltas">' +
+      deltas.map(x=>'<span class="chip ' + (x.d>0?"up":"dn") + '">' + x.k + ' ' + (x.d>0?"+":"") + x.d + '</span>').join("") +
+    '</div>' +
+    (o.card ? '<div class="know">' +
+      '<div class="know-top">知 识 卡 · ' + o.card.ch + '</div>' +
+      '<div class="know-title">' + o.card.pt + '</div>' +
+      '<div class="know-note">' + o.card.note + '</div>' +
+    '</div>' : '') +
+    '<button class="btn" id="nextBtn">' + (idx === flat.length-1 ? "看看我的人生画像" : "继续") + '</button>';
+
+  $("fbSlot").appendChild(fb);
+  $("nextBtn").onclick = next;
+  setTimeout(()=>{ fb.scrollIntoView({behavior:"smooth", block:"center"}); }, 120);
+}
+
+function next(){
+  if (idx === flat.length - 1) return showEnd();
+  idx++;
+  render();
+}
+
+function showEnd(){
+  $("game").style.display = "none";
+  $("end").style.display = "block";
+
+  const total = KEYS.reduce((a,k)=>a + Math.round(S[k]), 0);
+  const e = ENDINGS.find(x => x.cond(S));
+
+  $("endTitle").textContent = "「" + e.title + "」";
+  $("endDesc").innerHTML = e.desc;
+  $("endScore").textContent = total;
+
+  $("endRadar").innerHTML = KEYS.map((k,i)=>{
+    const v = Math.round(S[k]);
+    return '<div class="radar-row"><span>' + k + '</span><div class="bar b' + (i+1) + '"><i style="width:' + v + '%"></i></div><span>' + v + '</span></div>';
+  }).join("");
+
+  $("endCards").innerHTML = cards.length
+    ? cards.map(c=>'<div class="cl-item"><span class="cl-ch">' + c.ch + '</span><span class="cl-pt">' + c.pt + '</span></div>').join("")
+    : '<div class="cl-item"><span class="cl-pt">没有解锁知识卡</span></div>';
+
+  const chs = [...new Set(cards.map(c=>c.ch))];
+  $("endChapters").innerHTML = chs.length
+    ? "本局覆盖：" + chs.join(" · ") + "（共 " + chs.length + " 个章节）<br>《思想道德与法治》课程实践 · 知识点来源于教材对应章节。"
+    : "本局未覆盖章节。";
+
+  try{
+    const best = Math.max(total, Number(localStorage.getItem("jzqc_best") || 0));
+    localStorage.setItem("jzqc_best", best);
+  }catch(err){}
+
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+function reset(){
+  KEYS.forEach(k=>S[k] = 50);
+  idx = 0; cards = []; locked = false;
+  $("end").style.display = "none";
+  $("cover").style.display = "none";
+  $("game").style.display = "block";
+  render();
+}
+
+$("startBtn").onclick = reset;
+$("againBtn").onclick = reset;
+$("backBtn").onclick = ()=>{
+  $("end").style.display = "none";
+  $("game").style.display = "none";
+  $("cover").style.display = "block";
+  window.scrollTo({top:0});
+};
+$("authorLine").textContent = CONFIG.author;
+$("authorLine2").textContent = CONFIG.author;
+
+document.addEventListener("keydown", ev=>{
+  if ($("game").style.display !== "block") return;
+  const n = parseInt(ev.key, 10);
+  if (n >= 1 && n <= 3){
+    const btns = document.querySelectorAll(".opt");
+    if (btns[n-1] && !btns[n-1].disabled) btns[n-1].click();
+  } else if (ev.key === "Enter"){
+    const nb = $("nextBtn");
+    if (nb) nb.click();
+  }
+});
+</script>
+</body>
+</html>
